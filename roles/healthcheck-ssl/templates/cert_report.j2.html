@@ -1,0 +1,40 @@
+<html>
+
+<head>
+    <style>
+        table {
+            border-spacing: unset;
+        }
+        th {
+            background-color: darkcyan;
+            color: white;
+        }
+        td, th {
+            padding: 5px;
+            border: 0.5px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table>
+        <thead>
+            <tr>
+                {%- for col_key, value in ssl_results[0]['ansible_facts'].items() %}
+                <th >{{ col_key }}</th>
+                {% endfor %}
+            <tr>
+        </thead>
+        <tbody>
+            {%- for row_data in ssl_results %}
+            <tr>
+                {%- for col_key, value in row_data['ansible_facts'].items() %}
+                <td>{{ value }}</td>
+                {% endfor %}
+            <tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

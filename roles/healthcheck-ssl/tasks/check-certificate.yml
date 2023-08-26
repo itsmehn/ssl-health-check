@@ -1,0 +1,49 @@
+- name: Get a cert from an https port
+  community.crypto.get_certificate:
+    host: "{{ item.domain }}"
+    port: "{{ item.port }}"
+  delegate_to: localhost
+  run_once: true
+  register: cert
+
+- name: Normalize variable
+  vars:
+    v_factor_domain: "{{ item.domain.split('.')[1:] | join('.') }}"
+    v_subject_domain: '{{ cert.subject["CN"] }}'
+    v_expire_days: "{{ (( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) - (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ')) ).days }}"
+    v_wildcard_factor_domain: '{{"*." + v_factor_domain}}'
+    v_is_valid_subject: "{{ (v_wildcard_factor_domain == v_subject_domain) or (item.domain == v_subject_domain) }}"
+  set_fact:
+    factor_domain: "{{v_factor_domain}}"
+    subject_domain: "{{v_subject_domain}}"
+    expire_days: "{{v_expire_days}}"
+    wildcard_factor_domain: "{{v_wildcard_factor_domain}}"
+    is_valid_subject: "{{v_is_valid_subject}}"
+    request_domain: "{{item.domain}}"
+  register: cert_info
+
+- name: Print all cert information
+  debug:
+    msg:
+      "cert '{{ item.domain }}' expires in: '{{ expire_days }}' days , cert_subject:  '{{ cert.subject }}' \n
+      check expired: '{{ cert.expired }}' with factor domain '{{factor_domain}}', \n
+      wildcard_factor_domain: '{{wildcard_factor_domain}}' \n
+      subject '{{ subject_domain }}' is valid={{is_valid_subject}}"
+
+- name: Write report to file
+  lineinfile:
+    path: "{{ infor_certs_report }}"
+    regexp: "{{item.domain}}"
+    line: "{{item.domain}}, {{expire_days}}"
+
+- name: Write error report to file
+  when: is_valid_subject is falsy(convert_bool=True)
+  lineinfile:
+    path: "{{ error_certs_report }}"
+    regexp: "{{item.domain}}"
+    line: "{{item.domain}}, {{expire_days}}, {{subject_domain}}"
+  vars:
+    expire_days: "{{ (( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) - (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ')) ).days }}"
+
+- name: add item to main fact
+  set_fact: ssl_results="{{ ssl_results|default([]) + [ cert_info ] }}"

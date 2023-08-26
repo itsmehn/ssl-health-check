@@ -1,0 +1,4 @@
+---
+check_host_agent:
+  hosts:
+    localhost:

@@ -1,0 +1,59 @@
+---
+- name: "Ensure infor_certs_report is already existed!"
+  ansible.builtin.file:
+    path: "{{ infor_certs_report }}"
+    state: touch
+
+- name: truncate old infor_certs_report
+  shell:
+    truncate {{ infor_certs_report }} -s 0  
+
+- name: "Ensure error_certs_report is already existed!"
+  ansible.builtin.file:
+    path: "{{ error_certs_report }}"
+    state: touch
+
+- name: truncate old error_certs_report
+  shell:
+    truncate {{ error_certs_report }} -s 0
+
+- name: Check All Cert Web sites
+  include_tasks: check-certificate.yml
+  with_items:
+    - "{{ web_sites }}"
+  register: echo
+
+- name: Print all data
+  debug:
+    msg: "{{echo}}"
+
+- name: Health Check Results
+  debug:
+    msg: "{{ssl_results}}"
+
+- name: Generate report html
+  template:
+    src: 'templates/cert_report.j2.html'
+    dest: '{{dest_html_report}}'
+  register: html_template
+
+- name: "Generate report html"
+  vars:
+    rendered_template: "{{ lookup('template', './templates/cert_report.j2.html') }}"
+  set_fact:
+    output_html_content: '{{rendered_template}}'
+
+# - name: Send e-mail report to users
+#   community.general.mail:
+#     host: '{{ smtp_host }}'
+#     port: '{{ smtp_port }}'
+#     username: '{{ smtp_username }}'
+#     password: '{{ smtp_password }}'
+#     secure: '{{ smtp_encryption_method }}'
+#     subject: Ansible-Report-SSL Healt hCheck
+#     body: '{{ output_html_content }}'
+#     subtype: html
+#     from: '{{ from_email }}'
+#     to: '{{ to_emails }}'
+#     cc: '{{ cc_emails | default("[]") }}'
+#   delegate_to: localhost

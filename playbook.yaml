@@ -1,0 +1,8 @@
+---
+- name: Health Check SSL and Reports
+  hosts: localhost
+  connection: local
+  vars:
+    version: "1.22"
+  roles:
+    - healthcheck-ssl

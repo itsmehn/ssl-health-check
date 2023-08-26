@@ -1,0 +1,25 @@
+all:
+  hosts:
+    check-agent-host: 
+      hosts:
+        8.8.8.8
+  # Tự nhập thông tin gửi mail
+  vars:
+  #   smtp_host: smtp.gmail.com
+  #   smtp_port: 587
+  #   from_email: ngoc@gmail.com
+  #   smtp_username: a@gmail.com
+  #   smtp_password: ljjunvnaoyeyildn
+  #   smtp_encryption_method: starttls
+  #   to_emails:
+  #     - Nguyen Van A <a.nguyen@gmail.com>
+  #     - Nguyen Thi B <b.nguyen@gmail.com>
+  #   cc_emails:
+
+    error_certs_report: ./outputs/report_error_ssl.csv
+    infor_certs_report: ./outputs/report_ssl.csv
+    dest_html_report: ./outputs/report.html
+    web_sites:
+      - domain: google.com.vn
+        port: 443
+      
